@@ -1,0 +1,52 @@
+cd ~/code/opendm
+
+script/dm05_launcher.sh   --exp playground/dm05_sft_demo.py   --nproc_per_node 1   --task train   --model-config.model-name-or-path ./checkpoints/DM05   --model-config.precision-policy bf16_mixed   --model-config.llm-attn-implementation sdpa   --use-lora True   --trainer-config.per-device-train-batch-size 1   --data-config.compute-norm-stats-max-batches 1   --trainer-config.num-train-steps 50000     --trainer-config.output-dir ./user_checkpoints/dm05_sft_demo
+  
+  
+
+script/dm05_launcher.sh \
+  --exp playground/dm05_cr3_o6_sft.py \
+  --nproc_per_node 1 \
+  --task train \
+  --model-config.model-name-or-path ./checkpoints/DM05 \
+  --model-config.precision-policy bf16_mixed \
+  --model-config.llm-attn-implementation sdpa \
+  --use-lora True \
+  --trainer-config.per-device-train-batch-size 1 \
+  --trainer-config.num-train-steps 50000 \
+  --trainer-config.save-steps 10000 \
+  --trainer-config.output-dir ./user_checkpoints/dm05_cr3_o6_500 \
+  2>&1 | tee /tmp/dm05_cr3_o6_50000.log
+  
+  
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+script/dm05_launcher.sh \
+  --exp playground/dm05_cr3_o6_sft.py \
+  --nproc_per_node 1 \
+  --task train \
+  --model-config.model-name-or-path ./checkpoints/DM05 \
+  --model-config.precision-policy bf16_mixed \
+  --model-config.llm-attn-implementation sdpa \
+  --use-lora True \
+  --trainer-config.per-device-train-batch-size 4 \
+  --trainer-config.num-train-steps 100000 \
+  --trainer-config.save-steps 20000 \
+  --trainer-config.output-dir ./user_checkpoints/dm05_cr3_o6_100k_fresh \
+  2>&1 | tee /tmp/dm05_cr3_o6_100k_fresh.log
+  
+  
+  
+  
+script/dm05_launcher.sh \
+  --exp playground/dm05_cr3_o6_sft.py \
+  --task inference \
+  --model-config.model-name-or-path ./user_checkpoints/dm05_cr3_o6_500/checkpoint-50000 \
+  --model-config.chunk-size 50 \
+  --model-config.precision-policy bf16_mixed \
+  --model-config.llm-attn-implementation sdpa \
+  --model-config.vision-attn-implementation sdpa \
+  --model-config.action-attn-implementation sdpa \
+  --inference-config.output-action-dim 12 \
+  --inference-config.image-prompts "Head" "Left wrist" "Right wrist" \
+  --inference-config.port 7891 \
+  2>&1 | tee /tmp/dm05_cr3_o6_inference.log
